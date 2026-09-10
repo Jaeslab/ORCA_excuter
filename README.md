@@ -1,14 +1,14 @@
 # DFT_auto (EASY ORCA INP GENERATOR)
 
-ORCA `.inp` 파일을 대화식으로 생성해주는 스크립트입니다. `ver2-1.py`를 실행하면 몇 가지 질문에 답하는 것만으로 `분자이름_계산종류.inp` 파일이 만들어지고, 원하면 바로 이어서 ORCA 실행 + 진행 상황 확인 + 결과 요약까지 해줍니다.
+ORCA `.inp` 파일을 대화식으로 생성해주는 스크립트입니다. `main.py`를 실행하면 몇 가지 질문에 답하는 것만으로 `분자이름_계산종류.inp` 파일이 만들어지고, 원하면 바로 이어서 ORCA 실행 + 진행 상황 확인 + 결과 요약까지 해줍니다.
 
-> 폴더에 `main.py`, `ver20.py`, `ver2-1.py`가 같이 있는데, 현재 활발히 수정 중인 최신 버전은 **`ver2-1.py`**입니다. 이 문서도 `ver2-1.py` 기준으로 작성되었습니다.
+> 폴더에 `main.py`, `ver20.py`, `old.py`가 같이 있는데, 현재 활발히 수정 중인 최신 버전은 **`main.py`**입니다. 이 문서도 `main.py` 기준으로 작성되었습니다.
 
 질문들은 화면에 계속 쌓이지 않고, 답할 때마다 같은 자리에서 다음 질문으로 갱신됩니다.
 
 ## 설치 (Windows / macOS 공통)
 
-`ver2-1.py`는 `glob`, `os`, `re`, `shutil`, `subprocess`, `sys`, `time`처럼 파이썬 표준 라이브러리만 씁니다. 별도 `pip install`은 필요 없고, 아래 두 가지만 있으면 됩니다.
+`main.py`는 `glob`, `os`, `re`, `shutil`, `subprocess`, `sys`, `time`처럼 파이썬 표준 라이브러리만 씁니다. 별도 `pip install`은 필요 없고, 아래 두 가지만 있으면 됩니다.
 
 - **Python 3** (3.8 이상 권장) — f-string 등을 쓰므로 3.6 미만은 안 됩니다.
 - **ORCA 프로그램 본체** — ORCA 자체를 실행/설치하는 것과는 별개로, 이 스크립트는 `.inp` 파일만 만들어주는 도구입니다. ORCA로 바로 계산까지 돌리고 싶으면 [ORCA Forum](https://orcaforum.kofo.mpg.de)에서 가입 후 무료로 받을 수 있습니다.
@@ -19,10 +19,10 @@ ORCA `.inp` 파일을 대화식으로 생성해주는 스크립트입니다. `ve
 1. [python.org](https://www.python.org/downloads/windows/)에서 설치 파일을 받아 실행합니다. **설치 첫 화면에서 "Add python.exe to PATH" 체크박스를 반드시 켜세요** — 안 켜면 명령 프롬프트에서 `python`을 못 찾습니다.
 2. ORCA는 받은 압축 파일을 원하는 폴더에 그냥 풀면 됩니다 (예: `C:\orca_6_0_1`). 설치 프로그램은 따로 없습니다.
 3. 병렬 계산을 쓸 거면 ORCA가 요구하는 버전의 MS-MPI(`msmpisetup.exe`, `msmpisdk.msi`)를 설치합니다.
-4. `ver2-1.py`와 계산할 `.xyz`/`.inp` 파일들을 같은 폴더에 넣고, PowerShell(또는 명령 프롬프트)에서:
+4. `main.py`와 계산할 `.xyz`/`.inp` 파일들을 같은 폴더에 넣고, PowerShell(또는 명령 프롬프트)에서:
    ```powershell
    cd C:\원하는\작업폴더
-   python ver2-1.py
+   python main.py
    ```
 5. ORCA 실행파일 경로를 물어보면 `C:\orca_6_0_1\orca.exe`처럼 `.exe`까지 포함한 전체 경로를 입력합니다.
 6. ⚠️ 구버전 `cmd.exe`(옛날 명령 프롬프트)는 이 스크립트가 화면을 지우는 데 쓰는 ANSI 이스케이프 코드를 제대로 처리 못해서 질문이 안 지워지고 이상한 문자가 보일 수 있습니다. Windows 10/11 기본 Windows Terminal이나 PowerShell에서는 정상적으로 동작합니다.
@@ -38,13 +38,13 @@ ORCA `.inp` 파일을 대화식으로 생성해주는 스크립트입니다. `ve
 4. 터미널(Terminal.app, iTerm2 등)에서:
    ```bash
    cd ~/원하는/작업폴더
-   python3 ver2-1.py
+   python3 main.py
    ```
 5. ORCA 실행파일 경로를 물어보면 `/opt/orca_6_0_1/orca`처럼 확장자 없는 전체 경로를 입력합니다.
 
 ## 준비물
 
-- 계산할 분자의 구조 정보(`.xyz` 파일, 또는 구조가 들어있는 `.inp` 파일)를 `ver2-1.py`와 같은 디렉토리에 둡니다.
+- 계산할 분자의 구조 정보(`.xyz` 파일, 또는 구조가 들어있는 `.inp` 파일)를 `main.py`와 같은 디렉토리에 둡니다.
 - ESD 계산을 할 경우, 미리 계산해둔 Hessian(`.hess`) 파일이 필요합니다 (아래 ESD 항목 참고). 이 파일은 4번(DFT single Freq)/5번(TDDFT Numfreq) 계산으로 직접 만들 수 있습니다.
 - ORCA로 바로 실행까지 하고 싶다면 ORCA 실행파일이 있어야 합니다.
 
@@ -52,12 +52,12 @@ ORCA `.inp` 파일을 대화식으로 생성해주는 스크립트입니다. `ve
 
 macOS/Linux:
 ```bash
-python3 ver2-1.py
+python3 main.py
 ```
 
 Windows:
 ```powershell
-python ver2-1.py
+python main.py
 ```
 
 ## 1. 분자 구조 선택
@@ -332,3 +332,17 @@ end
  H   0.000000   0.000000   1.089000
 *
 ```
+
+## 변경 이력
+
+### 2.2
+
+- **계산별 하위폴더 자동 생성**: `.inp` 저장 시 `분자이름_접미사/` 폴더를 만들어 그 안에 `.inp`와 참조하는 `.xyz`를 함께 복사해둡니다 (이전엔 최상위 폴더에 `.inp`만 저장, `.xyz` 복사 없음). ORCA 실행도 이 폴더 안에서 이뤄지도록 경로가 바뀌었습니다. `import inp`(9번)로 불러온 파일은 이 폴더 구조 없이 원래 위치 그대로 실행됩니다.
+- **TDDFT opt/Numfreq에 `followiroot true` 자동 추가**: 지오메트리가 바뀌면서 들뜬상태 순서가 뒤바뀌는 root flipping을 막고, 지정한 `iroot`가 가리키던 전자 상태를 끝까지 추적하도록 함.
+- **Solvation(CPCM) 지원 추가**: 용매의 상대유전율(epsilon)을 입력받아 `%cpcm` 블록을 생성하는 옵션이 추가됨.
+- **NTO(Natural Transition Orbital) 계산 옵션 추가**: TDDFT single point/opt에서 `doNTO true` 여부를 물어봄.
+- **Grid6(파인 그리드) 옵션 추가**: 인광 계산 정확도를 위해 `Grid5 FinalGrid6`를 넣을지 물어봄 (TDDFT single point/opt).
+- **Magnetic transition dipole(CD 스펙트럼) 확인 옵션 추가**: TDDFT single point/opt에서 y로 답하면 `%tddft`에 `printlevel 3`이 실제로 반영되어 자기 전이 쌍극자 성분과 CD 스펙트럼까지 출력됨.
+- **inp 파일 검색 범위 확장**: 구조 가져오기(`mol_chooser`)와 `import inp` 목록이 위에서 추가된 계산별 하위폴더 안까지 한 단계 더 검색하도록 확장됨.
+- **`.out` 파일 읽기 안정성 개선**: 진행상황 파싱 시 `errors="ignore"`를 추가해 디코딩 에러로 죽는 문제 방지.
+- 버그 수정: TDDFT opt/Numfreq에서 iroot의 삼중항 여부 질문과 무관하게 `triplets true`가 항상 켜지던 것, `import inp` 실행 시 발생하던 `NameError` 등.
